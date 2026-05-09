@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: monthly_stats
+    description: "Nombre d'offres d'emploi agrégées par mois et par source"
+    columns:
+      - name: year
+        tests:
+          - not_null
+      - name: month
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1,2,3,4,5,6,7,8,9,10,11,12]
+      - name: job_count
+        description: "Nombre d'offres publiées ce mois"
+        tests:
+          - not_null
+
+  - name: job_trend
+    description: "Tendance globale avec rolling average sur 3 mois"
+    columns:
+      - name: year
+        tests:
+          - not_null
+      - name: month
+        tests:
+          - not_null
+      - name: rolling_avg_3m
+        description: "Moyenne mobile du nombre d'offres sur 3 mois"
+
+  - name: skill_trends
+    description: "Compétences les plus demandées par mois"
+    columns:
+      - name: skill
+        tests:
+          - not_null
+      - name: mention_count
+        tests:
+          - not_null

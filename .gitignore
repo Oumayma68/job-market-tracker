@@ -1,0 +1,12 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# dbt generated files
+dbt/target/
+dbt/logs/
+
+# dbt credentials
+dbt/profiles.yml
+.streamlit/secrets.toml
+

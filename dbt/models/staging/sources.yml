@@ -1,0 +1,27 @@
+version: 2
+
+sources:
+  - name: raw
+    database: JOBMARKET
+    schema: PUBLIC
+    description: "Données brutes chargées par le collecteur pandas"
+    tables:
+      - name: RAW_JOBS
+        description: "Offres d'emploi brutes collectées depuis Adzuna"
+        columns:
+          - name: ID
+            description: "Identifiant unique de l'offre"
+            tests:
+              - not_null
+          - name: TITLE
+            tests:
+              - not_null
+          - name: SOURCE
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ["adzuna"]
+          - name: PUBLISHED_AT
+            tests:
+              - not_null
+

@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: stg_jobs
+    description: "Staging layer — nettoyage et standardisation des offres brutes depuis RAW_JOBS"
+    columns:
+      - name: job_id
+        description: "Identifiant unique de l'offre"
+        tests:
+          - not_null
+          - unique
+      - name: job_title
+        description: "Intitulé du poste"
+        tests:
+          - not_null
+      - name: company
+        tests:
+          - not_null
+      - name: published_at
+        tests:
+          - not_null
+      - name: collected_at
+        tests:
+          - not_null
