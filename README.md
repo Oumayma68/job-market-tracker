@@ -9,7 +9,6 @@ This project is an end-to-end data engineering pipeline that collects, processes
 - Workflow orchestration with Apache Airflow
 - Data warehousing in Snowflake (RAW layer)
 - ELT transformation & automated testing with dbt
-- Interactive analytics dashboard with Streamlit
 
 ---
 
@@ -21,14 +20,13 @@ flowchart TD
     B --> C["Snowflake Raw Data"]
     C --> D["dbt"]
     D --> E["Analytics Layer Marts"]
-    E --> F["Streamlit Dashboard"]
+
 
     style A fill:#FFF3E0,stroke:#E65100,stroke-width:2px,color:#333
     style B fill:#E3F2FD,stroke:#01579B,stroke-width:2px,color:#333
     style C fill:#E8F5E9,stroke:#1B5E20,stroke-width:2px,color:#333
     style D fill:#FFEBEE,stroke:#BF360C,stroke-width:2px,color:#333
     style E fill:#F3E5F5,stroke:#4A148C,stroke-width:2px,color:#333
-    style F fill:#EDE7F6,stroke:#4527A0,stroke-width:2px,color:#333
 ```
 
 ---
@@ -48,12 +46,6 @@ flowchart TD
 ### 3. Data Quality Check
 - Validates that at least **10 job offers** were collected per run
 - Fails the DAG early if the volume threshold is not met, preventing bad data from propagating downstream
-
-### 4. Data Transformation – dbt (ELT)
-- **Staging layer** – cleans, types, and standardizes raw data (`stg_jobs`)
-- **Marts layer** – analytics-ready models for business consumption
-- Automated **dbt tests** on every run (not-null, unique, accepted values)
-- dbt **documentation auto-generated** at the end of each pipeline run
 
 ---
 
@@ -123,18 +115,6 @@ Create a connection named `jmt_snowflake_default` with:
 
 - Activate `job_market_tracker` in the Airflow UI
 - Trigger manually or wait for the daily schedule at 06:00 UTC
-
-### 4. Run the Dashboard
-
-1. Install the required dependencies:
-   ```bash
-   pip install streamlit snowflake-connector-python pandas plotly
-   ```
-2. Start the Streamlit dashboard
-    ```bash
-   streamlit run dashboard.py
-   ```
-
 
 
 ---
