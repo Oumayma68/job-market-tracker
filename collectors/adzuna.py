@@ -1,5 +1,5 @@
 """
-Collecteur Adzuna → Snowflake (table RAW_JOBS
+Collecteur Adzuna → Snowflake
 """
 import os
 import time

@@ -4,10 +4,10 @@ sources:
   - name: raw
     database: JOBMARKET
     schema: PUBLIC
-    description: "Données brutes chargées par le collecteur pandas"
+    description: "Données brutes chargées par le collecteur"
     tables:
       - name: RAW_JOBS
-        description: "Offres d'emploi brutes collectées depuis Adzuna"
+        description: "Offres d'emploi brutes collectées depuis azduna."
         columns:
           - name: ID
             description: "Identifiant unique de l'offre"

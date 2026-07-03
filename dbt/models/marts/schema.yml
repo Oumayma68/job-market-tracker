@@ -1,6 +1,35 @@
 version: 2
 
 models:
+  - name: jobs_clean
+    description: "Offres d'emploi nettoyées et filtrées (sans plateformes ni contrats indésirables)"
+    columns:
+      - name: job_id
+        tests:
+          - not_null
+          - unique
+      - name: job_title
+        tests:
+          - not_null
+      - name: company
+        tests:
+          - not_null
+      - name: contract_type
+        tests:
+          - not_null
+      - name: source
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['adzuna']
+      - name: published_at
+        tests:
+          - not_null
+      - name: salary_mid
+        description: "Salaire médian calculé depuis salary_min et salary_max"
+      - name: skills
+        description: "Liste de compétences extraites au format JSON"
+
   - name: monthly_stats
     description: "Nombre d'offres d'emploi agrégées par mois et par source"
     columns:

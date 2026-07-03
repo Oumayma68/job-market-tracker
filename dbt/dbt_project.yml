@@ -13,7 +13,7 @@ models:
   job_market_tracker:
     staging:
       +schema: staging
-      +materialized: view        # staging = vues légères
+      +materialized: view        
     marts:
       +schema: marts
-      +materialized: table       # marts = tables 
+      +materialized: table       

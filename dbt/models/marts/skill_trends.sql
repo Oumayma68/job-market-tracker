@@ -1,10 +1,8 @@
 WITH jobs AS (
     SELECT year, month, skills
-    FROM {{ ref('stg_jobs') }}
+    FROM {{ ref('jobs_clean') }}
     WHERE skills IS NOT NULL
 ),
-
--- Snowflake : PARSE_JSON + FLATTEN pour exploser le tableau de skills
 exploded AS (
     SELECT
         j.year,
@@ -13,25 +11,22 @@ exploded AS (
     FROM jobs j,
     LATERAL FLATTEN(input => PARSE_JSON(j.skills)) s
 ),
-
 aggregated AS (
     SELECT
         skill,
         year,
         month,
+        DATE_FROM_PARTS(year, month, 1) AS date,
         COUNT(*) AS mention_count
     FROM exploded
     WHERE skill != ''
     GROUP BY skill, year, month
 ),
-
--- Rank des skills par mois (utile pour streamlit Top N)
 with_rank AS (
     SELECT
         *,
         RANK() OVER (PARTITION BY year, month ORDER BY mention_count DESC) AS monthly_rank
     FROM aggregated
 )
-
 SELECT * FROM with_rank
 ORDER BY year, month, monthly_rank

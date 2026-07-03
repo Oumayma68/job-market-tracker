@@ -1,7 +1,6 @@
 WITH base AS (
-    SELECT * FROM {{ ref('stg_jobs') }}
+    SELECT * FROM {{ ref('jobs_clean') }}
 )
-
 SELECT
     year,
     month,

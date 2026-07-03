@@ -11,6 +11,7 @@ with_trend AS (
     SELECT
         year,
         month,
+        DATE_FROM_PARTS(year, month, 1) AS date,
         job_count,
         -- Moyenne mobile sur 3 mois
         ROUND(
