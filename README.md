@@ -148,6 +148,4 @@ Create a connection named `jmt_snowflake_default` with:
 [![s1.png](https://i.postimg.cc/L6dt7WL2/s1.png)](https://postimg.cc/JtqHHPp2)
 [![s2.png](https://i.postimg.cc/TY8VSsgP/s2.png)](https://postimg.cc/9zpwwJx3)
 
-### Streamlit Dashboard 
-[![Capture-d-ecran-2026-05-13-145455.png](https://i.postimg.cc/wjR1DXwg/Capture-d-ecran-2026-05-13-145455.png)](https://postimg.cc/hXg4BdF5)
-[![Capture-d-ecran-2026-05-13-145240.png](https://i.postimg.cc/PxyJd25D/Capture-d-ecran-2026-05-13-145240.png)](https://postimg.cc/mzcBw3MZ)
+
