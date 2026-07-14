@@ -44,8 +44,8 @@ normalized AS (
             '( h/f| f/h| hf|\(h/f\)|\[h/f\]|/h/f| h\.f\.)',
             ''
         ) AS title_norm,
-        REGEXP_REPLACE(LOWER(TRIM(company)), '\s+', ' ')  AS company_norm,
-        REGEXP_REPLACE(LOWER(TRIM(location)), '\s+', ' ') AS location_norm
+        REGEXP_REPLACE(LOWER(TRIM(company)), '\\s+', ' ')  AS company_norm,
+        REGEXP_REPLACE(LOWER(TRIM(location)), '\\s+', ' ') AS location_norm
     FROM cleaned
 ),
 deduped AS (

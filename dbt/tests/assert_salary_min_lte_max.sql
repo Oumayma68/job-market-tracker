@@ -1,5 +1,3 @@
--- Test : cohérence salariale
- 
 SELECT *
 FROM {{ ref('stg_jobs') }}
 WHERE salary_min IS NOT NULL

@@ -1,5 +1,4 @@
 version: 2
-
 models:
   - name: jobs_clean
     description: "Offres d'emploi nettoyées et filtrées (sans plateformes ni contrats indésirables)"
@@ -21,7 +20,7 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['adzuna']
+              values: ['francetravail']
       - name: published_at
         tests:
           - not_null
@@ -67,3 +66,23 @@ models:
       - name: mention_count
         tests:
           - not_null
+
+  - name: skills_salary
+    description: "Salaire moyen par compétence (skills flatten depuis jobs_clean)"
+    columns:
+      - name: skill
+        tests:
+          - not_null
+          - unique
+      - name: mention_count
+        description: "Nombre d'offres mentionnant ce skill (minimum 5)"
+        tests:
+          - not_null
+      - name: avg_salary
+        description: "Salaire moyen pour ce skill"
+        tests:
+          - not_null
+      - name: min_salary
+        description: "Salaire minimum observé pour ce skill"
+      - name: max_salary
+        description: "Salaire maximum observé pour ce skill"

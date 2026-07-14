@@ -1,5 +1,3 @@
--- Test : fraîcheur des données par source
-
 SELECT
     source,
     MAX(collected_at) AS last_collected_at,

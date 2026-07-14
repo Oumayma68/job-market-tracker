@@ -1,82 +1,101 @@
-#  Job Market Tracker 
+# Job Market Tracker
 
 ## Overview
+This project is an end-to-end data engineering pipeline that monitors the French tech job market by collecting and analyzing real-time offers from the **France Travail API**. 
 
-This project is an end-to-end data engineering pipeline that collects, processes, and analyzes job market data from the **Adzuna API**. It demonstrates how to build a production-grade pipeline with:
-
-- Reliable job offer ingestion from an external API (rate limiting, pagination, exponential backoff retry)
-- Unified data modeling with automatic skill extraction (NLP keyword matching)
-- Workflow orchestration with Apache Airflow
-- Data warehousing in Snowflake (RAW layer)
-- ELT transformation & automated testing with dbt
-
+It implements a production-grade architecture designed around three core stages:
+- **Orchestration & Ingestion:** Automated data collection with Apache Airflow, featuring built-in rate-limiting and text parsing (salary normalization & skill extraction).
+- **Storage & Transformation:** Scalable ELT data warehousing inside Snowflake, fully modeled and tested using dbt.
+- **Analytics & BI:** Clean business insights delivered through an interactive Metabase dashboard.
 ---
 
 ## Architecture
 
 ```mermaid
-flowchart TD
-    A["Adzuna API"] --> B["Airflow"]
-    B --> C["Snowflake Raw Data"]
-    C --> D["dbt"]
-    D --> E["Analytics Layer Marts"]
+flowchart LR
+    %% Configuration globale du layout
+    direction LR
+    
+    %% Noeuds principaux
+    API["🌐 France Travail API"] 
+    Airflow["🚀 Apache Airflow"]
+    Metabase["📊 Metabase Dashboard"]
 
+    %% Zone Snowflake
+    subgraph Snowflake ["❄️ Snowflake Cloud Data Warehouse"]
+        direction LR
+        Raw[("📁 RAW_JOBS<br/>(Landing Layer)")]
+        dbt[["🛠️ dbt Core<br/>(Transformations)"]]
+        Marts[("🎯 ANALYTICS_MARTS<br/>(Business Layer)")]
+        
+        Raw --> dbt --> Marts
+    end
 
-    style A fill:#FFF3E0,stroke:#E65100,stroke-width:2px,color:#333
-    style B fill:#E3F2FD,stroke:#01579B,stroke-width:2px,color:#333
-    style C fill:#E8F5E9,stroke:#1B5E20,stroke-width:2px,color:#333
-    style D fill:#FFEBEE,stroke:#BF360C,stroke-width:2px,color:#333
-    style E fill:#F3E5F5,stroke:#4A148C,stroke-width:2px,color:#333
+    %% Flux principaux
+    API -->|Ingest| Airflow
+    Airflow -->|Load| Raw
+    Marts -->|Query| Metabase
+
+    %% Styles CSS personnalisés (Modern & Clean)
+    classDef external fill:#f8f9fa,stroke:#343a40,stroke-width:2px,color:#212529,font-weight:bold;
+    classDef orchestrator fill:#e8f0fe,stroke:#1a73e8,stroke-width:2px,color:#1557b0,font-weight:bold;
+    classDef warehouse fill:#ffffff,stroke:#4a5568,stroke-width:2px,color:#2d3748;
+    classDef dbtStyle fill:#fff5f5,stroke:#e53e3e,stroke-width:2px,color:#9b2c2c,font-weight:bold;
+    classDef bi fill:#f3f0ff,stroke:#7048e8,stroke-width:2px,color:#5733d6,font-weight:bold;
+    
+    %% Application des styles
+    class API external;
+    class Airflow orchestrator;
+    class Raw,Marts warehouse;
+    class dbt dbtStyle;
+    class Metabase bi;
+
+    %% Style du Subgraph
+    style Snowflake fill:#f1f3f5,stroke:#ced4da,stroke-width:2px,stroke-dasharray: 5 5,color:#495057,font-weight:bold;
 ```
 
 ---
 
 ## Data Pipeline
 
-### 1. Data Collection – Adzuna API
-- Fetches job offers using multiple search queries: `"data engineer"`, `"data engineer python"`, `"ingénieur données"`
-- Handles **rate limiting**, **pagination**, and implements an **exponential backoff retry** mechanism for reliable collection
-- Normalizes all offers into a unified `JobOffer` schema regardless of source format
-- Automatically extracts technical skills from job descriptions using **NLP keyword matching**
+### 1. Data Collection – France Travail API
+- Collects job offers using multiple search queries (`"data engineer"`, `"data engineer python"`, `"ingénieur données"`)
+- Implements **rate limiting**, **pagination**, and **exponential backoff retries**
+- Filters internships, freelance, and alternance offers during collection
+- Normalizes data into a unified `JobOffer` schema
+- Extracts technical skills using **rule-based keyword matching**
+- Parses and normalizes salaries from unstructured French text
+
+> **Note:** Adzuna was evaluated as a first data source but discarded due to poor data quality (only 9/80 offers had skills and salary populated). France Travail provides richer structured data directly from the API.
 
 ### 2. Data Loading – Snowflake (RAW Layer)
-- Loads raw job offers into the `RAW_JOBS` table via `write_pandas` for optimized bulk inserts
-- Deduplicates records on load to prevent duplicate entries across DAG runs
+- Bulk loads job offers into `RAW_JOBS` using Snowflake's `write_pandas`
+- Deduplicates records to ensure idempotent loading across DAG runs
 
 ### 3. Data Quality Check
-- Validates that at least **10 job offers** were collected per run
-- Fails the DAG early if the volume threshold is not met, preventing bad data from propagating downstream
+- Validates that at least **10 job offers** are collected per run
+- Fails the DAG early if the threshold is not met, preventing downstream data pollution
 
 ---
 
-
-
-## Analytics Layer (dbt Models)
+## Analytics Layer (dbt)
 
 ### dbt Lineage Graph
+[![dbt-dag(2).png](https://i.postimg.cc/HxT7MDFP/dbt-dag(2).png)](https://postimg.cc/R3bFr8Sc)
 
-[![s4.png](https://i.postimg.cc/qvNjHKgv/s4.png)](https://postimg.cc/Yvw11h15)
+### Models
+- **Seeds:** Reference tables for accepted contract types and excluded job platforms
+- **Staging (`stg_jobs`):** Cleans, deduplicates, and standardizes raw job data
+- **Marts:**
+  - `jobs_clean` – Curated dataset for analysis
+  - `job_trend` – Monthly hiring trends with a 3-month rolling average
+  - `monthly_stats` – Monthly hiring and salary metrics
+  - `skill_trends` – Skill demand over time
+  - `skills_salary` – Average salary by technical skill
 
-### Staging – `stg_jobs`
-Cleans and standardizes raw job data:
-- Unique job ID validation
-- Non-null checks on title, company, published date, collected date
-
-### Marts
-
-#### `job_trend`
-Monthly job posting trends by query and source.
-
-#### `monthly_stats`
-Aggregated monthly statistics:
-- Total job count per month/year
-- Distribution by job type
-
-#### `skill_trends`
-Tracks skill mentions extracted from job descriptions:
-- Skill name
-- Mention count over time
-
+### Data Quality
+- Schema tests (`unique`, `not_null`, `accepted_values`)
+- Custom tests for salary consistency, publication dates, and data freshness
 ---
 
 ## Business Insights
@@ -84,23 +103,21 @@ Tracks skill mentions extracted from job descriptions:
 This pipeline enables answering questions such as:
 - How is demand for data engineering roles evolving month over month?
 - Which technical skills (Python, Spark, Airflow…) are most in demand?
-- What are the hiring trends in the French job market for data roles?
+- Which skills are the best paid on the French market?
+- Which companies recruit the most data engineers in France?
 
 ---
 
 ## How to Run
 
 ### 1. Configure Airflow Variables
-
 In the Airflow UI, add the following variables:
-
 ```
-ADZUNA_APP_ID=your_adzuna_app_id
-ADZUNA_APP_KEY=your_adzuna_app_key
+FRANCETRAVAIL_CLIENT_ID=your_client_id
+FRANCETRAVAIL_CLIENT_SECRET=your_client_secret
 ```
 
 ### 2. Configure Airflow Connection
-
 Create a connection named `jmt_snowflake_default` with:
 
 | Field | Value |
@@ -111,21 +128,59 @@ Create a connection named `jmt_snowflake_default` with:
 | Schema | `JOBMARKET` |
 | Extra (JSON) | `{"account": "...", "warehouse": "COMPUTE_WH", "snowflake_schema": "PUBLIC"}` |
 
-### 3. Run the DAG
+### 3. Configure dbt
+Add a profiles.yml file  with your Snowflake credentials in dbt folder:
+```
+jmt:
+  outputs:
+    dev:
+      type: snowflake
+      account: your-account.region
+      user: your_username
+      password: your_password
+      role: your_role
+      database: JOBMARKET
+      warehouse: COMPUTE_WH
+      schema: PUBLIC
+      threads: 4
+```
+### 4. Configure Metabase
+Open metabase and add a Snowflake database connection:
 
+| Field | Value |
+|-------|-------|
+| Account name | `your-account.region` (from your Snowflake URL) |
+| Username | your Snowflake username |
+| Password | your Snowflake password |
+| Warehouse | `COMPUTE_WH` |
+| Database name | `JOBMARKET` |
+| Schema | `PUBLIC_MARTS` |
+
+
+### 5. Run the DAG
 - Activate `job_market_tracker` in the Airflow UI
 - Trigger manually or wait for the daily schedule at 06:00 UTC
-
-
 ---
 
 ## Results
 
 ### Airflow DAG
-[![s3.png](https://i.postimg.cc/02gY34D2/s3.png)](https://postimg.cc/Th955CtZ)
+[![dag-jmt.png](https://i.postimg.cc/pXjXPc60/dag-jmt.png)](https://postimg.cc/kBndcs98)
 
 ### Snowflake Tables
-[![s1.png](https://i.postimg.cc/L6dt7WL2/s1.png)](https://postimg.cc/JtqHHPp2)
-[![s2.png](https://i.postimg.cc/TY8VSsgP/s2.png)](https://postimg.cc/9zpwwJx3)
+[![P1.png](https://i.postimg.cc/pVzDpvyp/P1.png)](https://postimg.cc/Th2y4ZV6)
+[![ST.png](https://i.postimg.cc/65ZKRrbM/ST.png)](https://postimg.cc/kB7LPbmS)
+
+### Metabase Dashboard
+
+[![MD.png](https://i.postimg.cc/VkDzLYHR/MD.png)](https://postimg.cc/pmhwstvh)
+
+Key visualizations:
+- **KPIs** — total offers, top skill of the month
+- **Job Trend** — monthly offers + 3-month rolling average
+- **Top Skills** — most demanded skills this month
+- **Skills vs Salary** — average salary per skill
+- **Top Companies** — most hiring companies
+---
 
 
