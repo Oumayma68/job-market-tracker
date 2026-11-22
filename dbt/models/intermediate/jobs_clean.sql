@@ -24,8 +24,5 @@ SELECT
 FROM stg j
 LEFT JOIN {{ ref('platforms') }} p
     ON LOWER(TRIM(j.company_norm)) = LOWER(TRIM(p.platform_name))
-LEFT JOIN {{ ref('contract_types') }} c
-    ON LOWER(TRIM(j.contract_type)) = LOWER(TRIM(c.contract_type))
 WHERE p.platform_name IS NULL
-  AND c.contract_type IS NULL
-  AND j.company != ''   
+  AND j.company != ''

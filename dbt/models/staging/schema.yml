@@ -2,23 +2,34 @@ version: 2
 
 models:
   - name: stg_jobs
-    description: "Staging layer — nettoyage et standardisation des offres brutes depuis RAW_JOBS"
+    description: "Staging layer — cleaning and standardization of raw offers from RAW_JOBS"
+
     columns:
       - name: job_id
-        description: "Identifiant unique de l'offre"
+        description: "Unique identifier of the offer"
         tests:
           - not_null
           - unique
+
       - name: job_title
-        description: "Intitulé du poste"
+        description: "Job title"
         tests:
           - not_null
+
       - name: company
+        description: "Company offering the position"
         tests:
           - not_null
+
       - name: published_at
-        tests:
-          - not_null
+        description: "Publication date of the offer"
+
       - name: collected_at
+        description: "Date on which the offer was collected"
         tests:
           - not_null
+
+      - name: salary_mid
+        description: >
+          Mid-point of the salary range: average of salary_min and
+          salary_max when both are provided, otherwise the available value.

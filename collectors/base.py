@@ -1,10 +1,11 @@
 from dataclasses import dataclass, asdict
 from datetime import datetime
+import re
 
 
 @dataclass
 class JobOffer:
-    """Schéma unifié pour toutes les sources."""
+    """Unified schema for all sources."""
     id: str
     title: str
     company: str
@@ -12,31 +13,105 @@ class JobOffer:
     contract_type: str       # CDI, CDD, Freelance...
     salary_min: float | None
     salary_max: float | None
-    skills: list[str]        # extraits du titre/description
+    skills: list[str]        # extracted from the title/description
     source: str              # adzuna, wttj, linkedin...
     url: str
-    published_at: datetime
+    published_at: datetime | None
     collected_at: datetime
 
     def to_dict(self) -> dict:
         d = asdict(self)
-        d["published_at"] = self.published_at.isoformat()
+        d["published_at"] = self.published_at.isoformat() if self.published_at else None
         d["collected_at"] = self.collected_at.isoformat()
         return d
 
 
-# Skills à détecter automatiquement dans le titre/description
+# Skills to detect automatically in the title/description
+
 SKILLS_KEYWORDS = [
-    "python", "spark", "kafka", "airflow", "dbt", "sql", "postgresql",
-    "aws", "gcp", "azure", "docker", "kubernetes", "terraform",
-    "pandas", "pyspark", "hadoop", "snowflake", "databricks",
-    "power bi", "tableau", "looker", "grafana", "elasticsearch",
-    "scala", "java", "bash", "git", "ci/cd", "mlflow",
+    # Programming
+    "Python",
+    "Java",
+    "Scala",
+    "SQL",
+
+    # Big Data
+    "Apache Spark",
+    "PySpark",
+    "Hadoop",
+    "Kafka",
+    "Flink",
+
+    # Cloud
+    "AWS",
+    "Azure",
+    "GCP",
+
+    # Data Warehousing
+    "Snowflake",
+    "Databricks",
+    "BigQuery",
+    "Redshift",
+
+    # Data Engineering
+    "dbt",
+    "ETL",
+    "ELT",
+
+    # Data Integration & Ingestion
+    "Fivetran",
+    "Airbyte",
+
+    # Databases & Search
+    "PostgreSQL",
+    "MySQL",
+    "MongoDB",
+    "Elasticsearch",
+
+    # Orchestration
+    "Airflow",
+    "Dagster",
+    "Prefect",
+
+    # BI & Visualization
+    "Power BI",
+    "Tableau",
+    "Looker",
+    "Grafana",
+
+    # Infrastructure & DevOps
+    "Docker",
+    "Kubernetes",
+    "Terraform",
+    "CI/CD",
 ]
 
 
-def extract_skills(text: str) -> list[str]:
-    """Détecte les skills mentionnés dans un texte."""
-    text_lower = text.lower()
-    return [skill for skill in SKILLS_KEYWORDS if skill in text_lower]
 
+def _compile_skill_pattern(skill: str) -> re.Pattern[str]:
+    """Build a pattern that avoids matches in the middle of a word."""
+    escaped = re.escape(skill)
+    right = r"(?![^\W\d])"
+
+    return re.compile(
+        rf"(?<!\w){escaped}{right}",
+        re.IGNORECASE
+    )
+
+
+_SKILL_PATTERNS = {
+    skill: _compile_skill_pattern(skill)
+    for skill in SKILLS_KEYWORDS
+}
+
+
+def extract_skills(text: str) -> list[str]:
+    """Return the recognized skills, in their normalized form."""
+    if not text:
+        return []
+
+    return [
+        skill
+        for skill in SKILLS_KEYWORDS
+        if _SKILL_PATTERNS[skill].search(text)
+    ]

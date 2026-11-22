@@ -1,7 +1,9 @@
+
 WITH source AS (
     SELECT *
     FROM {{ source('raw', 'RAW_JOBS') }}
 ),
+
 cleaned AS (
     SELECT
         ID                                          AS job_id,
@@ -11,31 +13,55 @@ cleaned AS (
         CONTRACT_TYPE                               AS contract_type,
         SOURCE                                      AS source,
         URL                                         AS url,
-        NULLIF(SALARY_MIN, 0)                       AS salary_min,
-        NULLIF(SALARY_MAX, 0)                       AS salary_max,
+
+        -- Salaires : neutralisation des valeurs invalides
         CASE
-            WHEN SALARY_MIN > 0 AND SALARY_MAX > 0 THEN (SALARY_MIN + SALARY_MAX) / 2
-            WHEN SALARY_MIN > 0 THEN SALARY_MIN
-            WHEN SALARY_MAX > 0 THEN SALARY_MAX
+            WHEN SALARY_MIN > 0
+             AND SALARY_MAX > 0
+             AND SALARY_MIN > SALARY_MAX
+                THEN NULL
+            WHEN SALARY_MIN > 0
+                THEN SALARY_MIN
             ELSE NULL
-        END                                         AS salary_mid,
+        END                                         AS salary_min,
+
+        CASE
+            WHEN SALARY_MIN > 0
+             AND SALARY_MAX > 0
+             AND SALARY_MIN > SALARY_MAX
+                THEN NULL
+            WHEN SALARY_MAX > 0
+                THEN SALARY_MAX
+            ELSE NULL
+        END                                         AS salary_max,
+
         PUBLISHED_AT::TIMESTAMP_TZ                  AS published_at,
         COLLECTED_AT::TIMESTAMP_TZ                  AS collected_at,
         YEAR(PUBLISHED_AT::TIMESTAMP_TZ)            AS year,
         MONTH(PUBLISHED_AT::TIMESTAMP_TZ)           AS month,
         WEEKOFYEAR(PUBLISHED_AT::TIMESTAMP_TZ)      AS week,
-        SKILLS
+        SKILLS                                      AS skills
+
     FROM source
+
     WHERE ID IS NOT NULL
       AND TITLE IS NOT NULL
       AND COMPANY IS NOT NULL
       AND PUBLISHED_AT::TIMESTAMP_TZ <= CURRENT_TIMESTAMP()
-      AND NOT (
-          SALARY_MIN > 0
-          AND SALARY_MAX > 0
-          AND SALARY_MIN > SALARY_MAX
-      )
 ),
+
+with_mid AS (
+    SELECT
+        *,
+        CASE
+            WHEN salary_min IS NOT NULL
+             AND salary_max IS NOT NULL
+                THEN (salary_min + salary_max) / 2
+            ELSE COALESCE(salary_min, salary_max)
+        END AS salary_mid
+    FROM cleaned
+),
+
 normalized AS (
     SELECT
         *,
@@ -44,15 +70,22 @@ normalized AS (
             '( h/f| f/h| hf|\(h/f\)|\[h/f\]|/h/f| h\.f\.)',
             ''
         ) AS title_norm,
-        REGEXP_REPLACE(LOWER(TRIM(company)), '\\s+', ' ')  AS company_norm,
-        REGEXP_REPLACE(LOWER(TRIM(location)), '\\s+', ' ') AS location_norm
-    FROM cleaned
-),
-deduped AS (
-    SELECT *,
-        ROW_NUMBER() OVER (PARTITION BY job_id ORDER BY collected_at DESC) AS rn
-    FROM normalized
+
+        REGEXP_REPLACE(
+            LOWER(TRIM(company)),
+            '\\s+',
+            ' '
+        ) AS company_norm,
+
+        REGEXP_REPLACE(
+            LOWER(TRIM(location)),
+            '\\s+',
+            ' '
+        ) AS location_norm
+
+    FROM with_mid
 )
+
 SELECT
     job_id,
     job_title,
@@ -73,5 +106,5 @@ SELECT
     month,
     week,
     skills
-FROM deduped
-WHERE rn = 1
+
+FROM normalized

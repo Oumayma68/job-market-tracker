@@ -1,0 +1,15 @@
+# Python dependencies to reproduce the project.
+# Airflow itself is usually installed separately (Docker image or the official
+# constraints file); only the packages this project imports are listed here.
+
+# Collection & loading (used inside the Airflow DAG)
+requests
+pandas
+snowflake-connector-python[pandas]
+apache-airflow-providers-snowflake
+
+# Transformation
+dbt-snowflake
+
+# Tests
+pytest

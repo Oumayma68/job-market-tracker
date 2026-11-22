@@ -4,11 +4,10 @@ data_tests:
   - name: assert_salary_min_lte_max
     config:
       severity: warn      
-
-  - name: assert_no_future_published_dates
-    config:
-      severity: warn       
-
   - name: assert_each_source_has_recent_data
     config:
-      severity: warn        
+      severity: warn
+
+  - name: assert_no_excluded_contracts_in_jobs_clean
+    config:
+      severity: error

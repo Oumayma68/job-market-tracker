@@ -1,88 +1,137 @@
+
 version: 2
+
 models:
-  - name: jobs_clean
-    description: "Offres d'emploi nettoyées et filtrées (sans plateformes ni contrats indésirables)"
-    columns:
-      - name: job_id
-        tests:
-          - not_null
-          - unique
-      - name: job_title
-        tests:
-          - not_null
-      - name: company
-        tests:
-          - not_null
-      - name: contract_type
-        tests:
-          - not_null
-      - name: source
-        tests:
-          - not_null
-          - accepted_values:
-              values: ['francetravail']
-      - name: published_at
-        tests:
-          - not_null
-      - name: salary_mid
-        description: "Salaire médian calculé depuis salary_min et salary_max"
-      - name: skills
-        description: "Liste de compétences extraites au format JSON"
-
   - name: monthly_stats
-    description: "Nombre d'offres d'emploi agrégées par mois et par source"
+    description: >
+      Monthly job market statistics aggregated by year, month and source.
+
     columns:
       - name: year
-        tests:
-          - not_null
-      - name: month
-        tests:
-          - not_null
-          - accepted_values:
-              values: [1,2,3,4,5,6,7,8,9,10,11,12]
-      - name: job_count
-        description: "Nombre d'offres publiées ce mois"
+        description: "Publication year"
         tests:
           - not_null
 
-  - name: job_trend
-    description: "Tendance globale avec rolling average sur 3 mois"
-    columns:
-      - name: year
-        tests:
-          - not_null
       - name: month
+        description: "Publication month"
         tests:
           - not_null
-      - name: rolling_avg_3m
-        description: "Moyenne mobile du nombre d'offres sur 3 mois"
+          - accepted_values:
+              values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+
+      - name: source
+        description: "Job offer source"
+        tests:
+          - not_null
+
+      - name: job_count
+        description: "Total number of job offers"
+        tests:
+          - not_null
+
+      - name: avg_salary
+        description: "Average salary among offers with a reported salary"
+
+      - name: jobs_with_salary
+        description: "Number of offers with a reported salary"
+
+      - name: salary_coverage_pct
+        description: "Percentage of offers with a reported salary"
+
+      - name: unique_companies
+        description: "Number of distinct companies publishing offers"
 
   - name: skill_trends
-    description: "Compétences les plus demandées par mois"
+    description: >
+      Monthly ranking of the most demanded skills,
+      based on the number of distinct job offers mentioning each skill.
+
     columns:
       - name: skill
-        tests:
-          - not_null
-      - name: mention_count
+        description: "Normalized skill name"
         tests:
           - not_null
 
+      - name: year
+        description: "Publication year"
+        tests:
+          - not_null
+
+      - name: month
+        description: "Publication month"
+        tests:
+          - not_null
+
+      - name: date
+        description: "First day of the publication month"
+
+      - name: mention_count
+        description: "Number of distinct job offers mentioning the skill"
+        tests:
+          - not_null
+
+      - name: monthly_rank
+        description: "Monthly ranking of the skill by demand"
+
   - name: skills_salary
-    description: "Salaire moyen par compétence (skills flatten depuis jobs_clean)"
+    description: >
+      Salary statistics by skill, calculated from job offers
+      with a reported salary. Only skills mentioned in at least
+      five distinct offers are retained.
+
     columns:
       - name: skill
+        description: "Normalized skill name"
         tests:
           - not_null
           - unique
+
       - name: mention_count
-        description: "Nombre d'offres mentionnant ce skill (minimum 5)"
+        description: "Number of distinct job offers mentioning the skill"
         tests:
           - not_null
+
       - name: avg_salary
-        description: "Salaire moyen pour ce skill"
+        description: "Average salary associated with the skill"
         tests:
           - not_null
+
+      - name: median_salary
+        description: "Median salary associated with the skill"
+
       - name: min_salary
-        description: "Salaire minimum observé pour ce skill"
+        description: "Minimum salary observed for the skill"
+
       - name: max_salary
-        description: "Salaire maximum observé pour ce skill"
+        description: "Maximum salary observed for the skill"
+
+  - name: geographic_stats
+    description: >
+      Geographic job market statistics aggregated by city,
+      including job offer volume, company count and salary indicators.
+
+    columns:
+      - name: city
+        description: "Normalized city name"
+        tests:
+          - not_null
+
+      - name: job_count
+        description: "Number of distinct job offers in the city"
+        tests:
+          - not_null
+
+      - name: company_count
+        description: "Number of distinct companies publishing offers"
+
+      - name: avg_salary
+        description: "Average salary among offers with a reported salary"
+
+      - name: median_salary
+        description: "Median salary among offers with a reported salary"
+
+      - name: first_published_at
+        description: "Publication date of the oldest offer in the city"
+
+      - name: last_published_at
+        description: "Publication date of the most recent offer in the city"

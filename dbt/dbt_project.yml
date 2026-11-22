@@ -13,7 +13,10 @@ models:
   job_market_tracker:
     staging:
       +schema: staging
-      +materialized: view        
+      +materialized: view      
+    intermediate:
+      +schema: intermediate
+      +materialized: view  
     marts:
       +schema: marts
       +materialized: table       

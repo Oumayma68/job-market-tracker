@@ -1,0 +1,50 @@
+
+version: 2
+
+models:
+  - name: jobs_clean
+    description: >
+      Intermediate model containing cleaned and filtered job offers.
+      Excludes job platforms and unwanted contract types.
+
+    columns:
+      - name: job_id
+        description: "Unique identifier of the job offer"
+        tests:
+          - not_null
+          - unique
+
+      - name: job_title
+        description: "Job title"
+        tests:
+          - not_null
+
+      - name: company
+        description: "Company offering the position"
+        tests:
+          - not_null
+
+      - name: contract_type
+        description: "Type of employment contract"
+        tests:
+          - not_null
+
+      - name: source
+        description: "Source of the job offer"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['francetravail']
+
+      - name: published_at
+        description: "Publication date of the job offer"
+        tests:
+          - not_null
+
+      - name: salary_mid
+        description: >
+          Salary midpoint calculated from salary_min and salary_max,
+          or the available salary when only one is provided.
+
+      - name: skills
+        description: "Extracted skills stored as a VARIANT array"

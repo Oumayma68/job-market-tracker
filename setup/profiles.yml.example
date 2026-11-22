@@ -1,0 +1,16 @@
+# Copy to dbt/profiles.yml and fill in your own values.
+# dbt/profiles.yml is git-ignored: never commit real credentials.
+job_market_tracker:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: ORGANIZATION-ACCOUNT   # e.g. myorg-myaccount (no region, no .snowflakecomputing.com)
+      user: your_username
+      password: your_password
+      role: your_role
+      database: JOBMARKET
+      warehouse: COMPUTE_WH
+      schema: PUBLIC
+      threads: 4
+      client_session_keep_alive: false

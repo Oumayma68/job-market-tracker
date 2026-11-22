@@ -1,27 +1,52 @@
+
 version: 2
 
 sources:
   - name: raw
     database: JOBMARKET
     schema: PUBLIC
-    description: "Données brutes chargées par le collecteur"
+    description: "Raw data loaded by the Airflow collector."
     tables:
       - name: RAW_JOBS
-        description: "Offres d'emploi brutes collectées depuis azduna."
+        description: >
+          Job offers collected from the France Travail API.
+          Offers are deduplicated by ID during ingestion in Airflow.
+          A MERGE operation inserts new offers and updates existing ones.
+
+        config:
+          loaded_at_field: COLLECTED_AT
+          freshness:
+            warn_after:
+              count: 2
+              period: day
+            error_after:
+              count: 3
+              period: day
+
         columns:
           - name: ID
-            description: "Identifiant unique de l'offre"
+            description: "Unique offer identifier, prefixed by the source (e.g. ft_123456)."
             tests:
               - not_null
+              - unique
+
           - name: TITLE
+            description: "Offer title."
             tests:
               - not_null
+
           - name: SOURCE
+            description: "Collection source. Only francetravail is used."
             tests:
               - not_null
               - accepted_values:
                   values: ["francetravail"]
-          - name: PUBLISHED_AT
-            tests:
-              - not_null
 
+          - name: PUBLISHED_AT
+            description: >
+              Publication date of the offer.
+              NULL values are excluded from stg_jobs.
+            tests:
+              - not_null:
+                  config:
+                    severity: warn

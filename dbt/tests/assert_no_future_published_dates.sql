@@ -1,4 +1,4 @@
 SELECT *
-FROM {{ ref('stg_jobs') }}
+FROM {{ source('raw', 'RAW_JOBS') }}
 WHERE published_at > CURRENT_TIMESTAMP()
  
